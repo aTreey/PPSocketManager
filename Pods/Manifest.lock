@@ -1,0 +1,15 @@
+PODS:
+  - CocoaAsyncSocket (7.6.2)
+  - KissXML (5.2.0)
+
+DEPENDENCIES:
+  - CocoaAsyncSocket
+  - KissXML
+
+SPEC CHECKSUMS:
+  CocoaAsyncSocket: 3541e024f48c54b251638ef72d51dd42808de932
+  KissXML: 1c1eeeb6b94e4522cd2f2373e5d0d03c9227738f
+
+PODFILE CHECKSUM: 52994f05821a5e7524a62a66b586341b0f9fdfe7
+
+COCOAPODS: 1.4.0.beta.2

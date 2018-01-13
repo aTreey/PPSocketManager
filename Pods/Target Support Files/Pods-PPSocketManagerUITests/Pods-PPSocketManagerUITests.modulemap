@@ -1,0 +1,6 @@
+framework module Pods_PPSocketManagerUITests {
+  umbrella header "Pods-PPSocketManagerUITests-umbrella.h"
+
+  export *
+  module * { export * }
+}
