@@ -11,13 +11,21 @@
 
 #import "SocketManager.h"
 #import "DDXMLElement+Extension.h"
+#import "ViewController+HandleMessageIQ.h"
+#import "ViewController+HandleMessage.h"
+
+#import "ViewController+SendMessage.h"
 
 
-static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
+static NSString *const kUserName = @"yuhongpeng@wanzhao.com/app";
+static NSString *const kCompanyId = @"1";
+static NSString *const kUsesrId = @"8f756551c6b94da198405c2276b522f1";
+
 
 @interface ViewController () <SocketManagerDelegate>
 
 @property (nonatomic, strong) SocketManager *manager;
+
 
 @end
 
@@ -29,19 +37,21 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
     
     _manager = [SocketManager instance];
     _manager.delegate = self;
-    [_manager connect];
     
+    [_manager connect];
 }
 
 
 // 登陆
 - (IBAction)loginAction:(id)sender {
     
-    [self loginMessage];
-    
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self pingData];
-    });
+    [_manager connect];
+//
+//    [self loginMessage];
+//
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        [self pingData];
+//    });
 }
 
 
@@ -49,10 +59,14 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
 - (IBAction)pingAction:(id)sender {
     
     
-//    [self pingData];
+    [self sendPing];
 
 }
 
+- (IBAction)disconnect:(id)sender {
+    
+//    [self.manager disconnect];
+}
 
 - (IBAction)messageAction:(id)sender {
 }
@@ -63,9 +77,58 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
     
     [self uploadToken];
     
+//    [self sendCustomerCenterListIQ];
+//    [self sendRecentContactsListIQ];
+//    [self sendEmergencyContactsListIQ];
+//    [self sendUserProfileSettingIQ];
+//    [self sendCallCenterTelephoneNumber];
+    
+    [self.manager sendMsg:[self sendEmergencyContactsListIQStr] type:MessageTypeIq];
+    [self.manager sendMsg:[self sendUserProfileSettingIQStr] type:MessageTypeIq];
+    
 }
 
 // 登陆
+
+- (IBAction)textmessageAction:(id)sender {
+
+    [self.manager sendMsg:[self textMessage:@"普通消息---鹏哥，你好" messageType:@"text"] type:MessageTypeMessage];
+    
+}
+- (IBAction)imageMessageAction:(id)sender {
+    
+
+}
+
+- (IBAction)takePhotoAction:(id)sender {
+    
+
+}
+- (IBAction)videoMessageAction:(id)sender {
+    
+
+}
+- (IBAction)fileMessageAction:(id)sender {
+
+}
+- (IBAction)locationMessage:(id)sender {
+    
+
+}
+- (IBAction)redPacketMessage:(id)sender {
+    
+
+}
+
+- (IBAction)privateMessage:(id)sender {
+    
+
+}
+
+- (IBAction)atSomeoneMessage:(id)sender {
+    
+
+}
 
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
@@ -77,15 +140,38 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
 
 #pragma mark - SocketManagerDelegate
 
+// 连接成功
 - (void)socketManager:(SocketManager *)manager didConnect:(NSString *)host port:(uint16_t)port {
-    
-    NSLog(@"status = %zd", [manager isConnect]);
+        
+    [self sendLoginMessage];
+    NSLog(@" 连接成功 status = %zd", [manager isConnect]);
     
 }
 
+
+// 断开连接
 - (void)socketManager:(SocketManager *)manager didDisconnectWithError:(NSError *)error {
     
-    NSLog(@"status = %zd", [manager isConnect]);
+    NSString *messagId = @"";
+    // TODO: 1. 获取正在发送失败的消息,
+    // 2. 插入到数据库
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // 3. 发送通知,更新相关UI界面
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"Message_send_status" object:messagId];
+    });
+    
+    
+    
+    /// 处理相关错误
+    dispatch_async(dispatch_get_main_queue(), ^{
+        
+        
+        
+    });
+    
+    
+    NSLog(@" 断开 status = %zd", [manager isConnect]);
 }
 
 
@@ -107,9 +193,15 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
             
         case MessageTypeMessage:
             NSLog(@"接收收到消息");
+        {
             
-            [self handleReceiveMessageWithElement:element];
-
+            NSString *messageId = [self handleReceiveMessageWithElement:element];
+            if (messageId) {
+                [self sendReceiptWithMessageId:messageId];
+            }
+            
+        }
+            
             break;
             
         case MessageTypeIq:
@@ -136,12 +228,6 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
 
 }
 
-#pragma mark - 处理接收到的消息
-
-- (void)handleReceiveMessageWithElement:(DDXMLElement *)element {
-    
-}
-
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -150,28 +236,54 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
 
 
 
-#pragma mark - 解析消息
-
 #pragma mark - 解析登陆
 - (void)handleLoginWithElement:(DDXMLElement *)element {
     DDXMLNode *node = [element attributeForName:@"issuccess"];
 
     if ([node.stringValue isEqualToString:@"yes"]) {
+        
+        NSLog(@"\n\n**************用户登陆成功**************\n\n");
+        
         // 1 发送ping包
-        [self pingData];
+        [self sendPing];
         
         // TODO: 2 发送登陆成功通知，切换根控制器
         
         // 3 获取服务器时间
         
-        // 4 发送token，用于APNS推送
+        // 4 发送token，用于APNS推送 （http）
+        
+        
+        // 5. 获取组织架构树 （http）
+        
+        // 6. 获取群组列表 （http）
+        
+        // 7. 获取分享相关 （http）
+        
+        // 8. 获取分享关注我的，我关注的人 （http）
+        
+        // 9. CXmppRequestMgr 获取客服, 常用联系人， 紧急联系人列表, 个人设置， 呼叫中心电话号码  （IQ）
+        
+//        [self sendCustomerCenterListIQ];
+//        [self sendRecentContactsListIQ];
+//        [self sendEmergencyContactsListIQ];
+//        [self sendUserProfileSettingIQ];
+//        [self sendCallCenterTelephoneNumber];
+        
+        
+        
+        // 10. 获取服务器配置  （http）
+        // 11. CXmppRequestMgr 获取客服 （IQ）
+        // 12. CXmppRequestMgr 获取客服 （IQ）
+        // 13. CXmppRequestMgr 获取客服 （IQ）
+        // 14. CXmppRequestMgr 获取客服 （IQ）
+
+        
     }
     
     // 登陆不成功
     else {
-        
-        [self.manager.reConnectTimer setFireDate:[NSDate distantFuture]];
-        [self.manager.reConnectTimer invalidate];
+        [self.manager stopReconnect];
         
         // 错误原因
         NSMutableDictionary *loginResultDict = [NSMutableDictionary dictionary];
@@ -184,21 +296,7 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
 
 
 
-#pragma mark - 解析消息
-- (void)handleMessageWithElement:(DDXMLElement *)element {
-    
-    if ([element isChat]) {
-        [self parseMessageBody:element isGroupChat:NO];
-    }
-    
-    else if ([element isGroupChat]) {
-        [self parseMessageBody:element isGroupChat:YES];
-    }
-    
-    else {
-        
-    }
-}
+
 
 
 // 处理发送的消息
@@ -213,11 +311,7 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
 }
 
 
-#pragma mark - 解析IQ
-- (void)handleIqWithElement:(DDXMLElement *)element {
-    
-    
-}
+
 
 #pragma mark - 解析出席状态
 - (void)handlePresenceWithElement:(DDXMLElement *)element {
@@ -232,10 +326,88 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
 
 
 
-
+/////////////////////////////////////////////////////
+///以下代码用 sendMessage 分类代替
+/////////////////////////////////////////////////////
 #pragma mark - 发送消息
-// 发送token IQ
 
+
+// 发普通消息
+- (void)sendTextMessageId:(NSString *)messageId {
+    
+}
+
+
+// 发回执
+- (void)sendReceiptWithMessageId:(NSString *)messageId {
+    DDXMLElement *receipt = [[DDXMLElement alloc] initWithName:@"msg"];
+    [receipt addAttributeWithName:@"reply" stringValue:@"yes"];
+    [receipt addAttributeWithName:@"type" stringValue:@"normal"];
+    [receipt addAttributeWithName:@"to" stringValue:@"@server"];
+    [receipt addAttributeWithName:@"id" stringValue:messageId];
+    [self.manager sendMsg:[receipt compactXMLString] type:MessageTypeMessage];
+}
+
+// call center telephoneNumber
+- (void)sendCallCenterTelephoneNumber {
+    DDXMLElement *aIQ = [[DDXMLElement alloc] initWithName:@"iq"];
+    [aIQ addAttributeWithName:@"id" stringValue:@"callTelephoneNumber"];
+    DDXMLNode *attrs =[DDXMLNode attributeWithName:@"iqType" stringValue:@"callTelephoneNumber"];
+    DDXMLNode *child =[DDXMLNode elementWithName:@"userId" stringValue:kUsesrId];
+    DDXMLNode *query = [DDXMLNode elementWithName:@"query" children:[NSArray arrayWithObjects:child, nil] attributes:[NSArray arrayWithObjects:attrs, nil]];
+    [aIQ addChild:query];
+    
+    [self.manager sendMsg:[aIQ compactXMLString] type:MessageTypeIq];
+}
+
+// 列表Recent Contact IQ
+- (void)sendUserProfileSettingIQ {
+    DDXMLElement *aIQ = [[DDXMLElement alloc] initWithName:@"iq"];
+    [aIQ addAttributeWithName:@"id" stringValue:@"appmsgNoticeSetGet"];
+    DDXMLNode *attrs =[DDXMLNode attributeWithName:@"iqType" stringValue:@"appmsgNoticeSetGet"];
+    [aIQ addChild:[DDXMLNode elementWithName:@"query" children:nil attributes:[NSArray arrayWithObjects:attrs, nil]]];
+    [self.manager sendMsg:[aIQ compactXMLString] type:MessageTypeIq];
+}
+
+// 获紧急联系人列表 IQ
+- (void)sendEmergencyContactsListIQ {
+    DDXMLElement *aIQ = [[DDXMLElement alloc] initWithName:@"iq"];
+    [aIQ addAttributeWithName:@"id" stringValue:@"contacturgencyList"];
+    DDXMLNode *attrs =[DDXMLNode attributeWithName:@"iqType" stringValue:@"contacturgencyList"];
+    DDXMLNode *child =[DDXMLNode elementWithName:@"userId" stringValue:kUsesrId];
+    DDXMLNode *query = [DDXMLNode elementWithName:@"query" children:[NSArray arrayWithObjects:child, nil] attributes:[NSArray arrayWithObjects:attrs, nil]];
+    [aIQ addChild:query];
+    
+    [self.manager sendMsg:[aIQ compactXMLString] type:MessageTypeIq];
+}
+
+// 最近联系人列表 IQ
+- (void)sendRecentContactsListIQ {
+    DDXMLElement *aIQ = [[DDXMLElement alloc] initWithName:@"iq"];
+    [aIQ addAttributeWithName:@"id" stringValue:@"contactList"];
+    DDXMLNode *attrs =[DDXMLNode attributeWithName:@"iqType" stringValue:@"contactList"];
+    DDXMLNode *child =[DDXMLNode elementWithName:@"userId" stringValue:kUsesrId];
+    DDXMLNode *query = [DDXMLNode elementWithName:@"query" children:[NSArray arrayWithObjects:child, nil] attributes:[NSArray arrayWithObjects:attrs, nil]];
+    [aIQ addChild:query];
+    
+    [self.manager sendMsg:[aIQ compactXMLString] type:MessageTypeIq];
+}
+
+
+
+// 获取客服列表 IQ
+- (void)sendCustomerCenterListIQ {
+    DDXMLElement * aIQ = [[DDXMLElement alloc] initWithName:@"iq"];
+    [aIQ addAttributeWithName:@"id" stringValue:@"getcompanykf"];
+    DDXMLNode *attrs =[DDXMLNode attributeWithName:@"iqType" stringValue:@"getcompanykf"];
+    DDXMLNode *attrs3 = [DDXMLNode elementWithName:@"companyId" stringValue:kUsesrId];
+    DDXMLNode *query = [DDXMLNode elementWithName:@"query" children:[NSArray arrayWithObjects:attrs3, nil] attributes:[NSArray arrayWithObjects:attrs, nil]];
+    [aIQ addChild:query];
+    
+    [self.manager sendMsg:[aIQ compactXMLString] type:MessageTypeIq];
+}
+
+// 发送token IQ
 - (void)uploadToken {
     
     NSString *token = [[NSUserDefaults standardUserDefaults] objectForKey:@"token"];
@@ -257,9 +429,9 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
 }
 
 // 发送登陆消息
-- (void)loginMessage {
+- (void)sendLoginMessage {
     DDXMLElement *peopleElement = [DDXMLElement elementWithName:@"login"];
-    DDXMLNode *useName = [DDXMLNode attributeWithName:@"from" stringValue:[NSString stringWithFormat:@"%@/app",@"yuhongpeng@wanzhao.com"]];
+    DDXMLNode *useName = [DDXMLNode attributeWithName:@"from" stringValue:kUserName];
     DDXMLNode *passWord = [DDXMLNode attributeWithName:@"password" stringValue:@"@123456Zw"];
     DDXMLNode *businessType =[DDXMLNode attributeWithName:@"businessType" stringValue:@"efeng"];
     [peopleElement addAttribute:useName];
@@ -272,12 +444,8 @@ static NSString *const kUserName = @"yuhongpeng@wanzhao.com";
 
 // 发送ping 包
 
-- (void)pingData {
-    DDXMLElement *pingElement = [DDXMLElement elementWithName:@"ping"];
-    DDXMLNode *userName = [DDXMLNode attributeWithName:@"from" stringValue:kUserName];
-    [pingElement addAttribute:userName];
-    NSString *str = [pingElement compactXMLString];
-    self.manager.pingData = [str dataUsingEncoding:NSUTF8StringEncoding];
+- (void)sendPing {
+    self.manager.pingData = [[self sendPingStr] dataUsingEncoding:NSUTF8StringEncoding];
     [self.manager.pingTimer setFireDate:[NSDate distantPast]];
 }
 

@@ -17,6 +17,10 @@
 		7A03B4312008BECC00D4FDD5 /* PPSocketManagerUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7A03B4302008BECC00D4FDD5 /* PPSocketManagerUITests.m */; };
 		7A03B4412008C01100D4FDD5 /* SocketManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 7A03B4402008C01100D4FDD5 /* SocketManager.m */; };
 		7ACFF458200A1A21004B952C /* DDXMLElement+Extension.m in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFF457200A1A21004B952C /* DDXMLElement+Extension.m */; };
+		7ACFF45C200A6C20004B952C /* MessageModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFF45B200A6C20004B952C /* MessageModel.m */; };
+		7ACFF45F200B1D50004B952C /* ViewController+HandleMessageIQ.m in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFF45E200B1D50004B952C /* ViewController+HandleMessageIQ.m */; };
+		7ACFF462200B3DE1004B952C /* ViewController+HandleMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFF461200B3DE1004B952C /* ViewController+HandleMessage.m */; };
+		7ACFF465200B64C9004B952C /* ViewController+SendMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFF464200B64C9004B952C /* ViewController+SendMessage.m */; };
 		B9CCB5717B66F6421F0A6CFD /* Pods_PPSocketManagerUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4076C3BF976F457345F4787A /* Pods_PPSocketManagerUITests.framework */; };
 		C62C44D063F6B9C1F0C4FEC4 /* Pods_PPSocketManagerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 85E92F16D85323EA65525FD3 /* Pods_PPSocketManagerTests.framework */; };
 		E0899B5CEB1960C41ADD34FB /* Pods_PPSocketManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F02F095633DEFAAD0AD0288 /* Pods_PPSocketManager.framework */; };
@@ -63,6 +67,14 @@
 		7A03B4402008C01100D4FDD5 /* SocketManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SocketManager.m; sourceTree = "<group>"; };
 		7ACFF456200A1A21004B952C /* DDXMLElement+Extension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DDXMLElement+Extension.h"; sourceTree = "<group>"; };
 		7ACFF457200A1A21004B952C /* DDXMLElement+Extension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "DDXMLElement+Extension.m"; sourceTree = "<group>"; };
+		7ACFF45A200A6C20004B952C /* MessageModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessageModel.h; sourceTree = "<group>"; };
+		7ACFF45B200A6C20004B952C /* MessageModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MessageModel.m; sourceTree = "<group>"; };
+		7ACFF45D200B1D50004B952C /* ViewController+HandleMessageIQ.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ViewController+HandleMessageIQ.h"; sourceTree = "<group>"; };
+		7ACFF45E200B1D50004B952C /* ViewController+HandleMessageIQ.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ViewController+HandleMessageIQ.m"; sourceTree = "<group>"; };
+		7ACFF460200B3DE1004B952C /* ViewController+HandleMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ViewController+HandleMessage.h"; sourceTree = "<group>"; };
+		7ACFF461200B3DE1004B952C /* ViewController+HandleMessage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ViewController+HandleMessage.m"; sourceTree = "<group>"; };
+		7ACFF463200B64C9004B952C /* ViewController+SendMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ViewController+SendMessage.h"; sourceTree = "<group>"; };
+		7ACFF464200B64C9004B952C /* ViewController+SendMessage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ViewController+SendMessage.m"; sourceTree = "<group>"; };
 		85E92F16D85323EA65525FD3 /* Pods_PPSocketManagerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PPSocketManagerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		977E0D07116CA23BBA91E272 /* Pods-PPSocketManagerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PPSocketManagerTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-PPSocketManagerTests/Pods-PPSocketManagerTests.release.xcconfig"; sourceTree = "<group>"; };
 		9C7751F50C530444DAEDAE48 /* Pods-PPSocketManagerUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PPSocketManagerUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-PPSocketManagerUITests/Pods-PPSocketManagerUITests.release.xcconfig"; sourceTree = "<group>"; };
@@ -134,12 +146,19 @@
 		7A03B40B2008BECB00D4FDD5 /* PPSocketManager */ = {
 			isa = PBXGroup;
 			children = (
+				7ACFF459200A6C08004B952C /* Model */,
 				7ACFF455200A19E5004B952C /* Tools */,
 				7A03B43E2008BFEB00D4FDD5 /* SocketManager */,
 				7A03B40C2008BECB00D4FDD5 /* AppDelegate.h */,
 				7A03B40D2008BECB00D4FDD5 /* AppDelegate.m */,
 				7A03B40F2008BECB00D4FDD5 /* ViewController.h */,
 				7A03B4102008BECB00D4FDD5 /* ViewController.m */,
+				7ACFF463200B64C9004B952C /* ViewController+SendMessage.h */,
+				7ACFF464200B64C9004B952C /* ViewController+SendMessage.m */,
+				7ACFF460200B3DE1004B952C /* ViewController+HandleMessage.h */,
+				7ACFF461200B3DE1004B952C /* ViewController+HandleMessage.m */,
+				7ACFF45D200B1D50004B952C /* ViewController+HandleMessageIQ.h */,
+				7ACFF45E200B1D50004B952C /* ViewController+HandleMessageIQ.m */,
 				7A03B4122008BECB00D4FDD5 /* Main.storyboard */,
 				7A03B4152008BECB00D4FDD5 /* Assets.xcassets */,
 				7A03B4172008BECB00D4FDD5 /* LaunchScreen.storyboard */,
@@ -183,6 +202,15 @@
 				7ACFF457200A1A21004B952C /* DDXMLElement+Extension.m */,
 			);
 			path = Tools;
+			sourceTree = "<group>";
+		};
+		7ACFF459200A6C08004B952C /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				7ACFF45A200A6C20004B952C /* MessageModel.h */,
+				7ACFF45B200A6C20004B952C /* MessageModel.m */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 		CD9011665383B62E96F0CEF6 /* Pods */ = {
@@ -496,7 +524,11 @@
 				7A03B41C2008BECB00D4FDD5 /* main.m in Sources */,
 				7A03B4412008C01100D4FDD5 /* SocketManager.m in Sources */,
 				7ACFF458200A1A21004B952C /* DDXMLElement+Extension.m in Sources */,
+				7ACFF465200B64C9004B952C /* ViewController+SendMessage.m in Sources */,
+				7ACFF462200B3DE1004B952C /* ViewController+HandleMessage.m in Sources */,
 				7A03B40E2008BECB00D4FDD5 /* AppDelegate.m in Sources */,
+				7ACFF45C200A6C20004B952C /* MessageModel.m in Sources */,
+				7ACFF45F200B1D50004B952C /* ViewController+HandleMessageIQ.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

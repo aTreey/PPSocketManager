@@ -46,7 +46,7 @@ typedef NS_ENUM(NSUInteger, MessageType) {
 /// 心跳定时器
 @property (nonatomic, strong) NSTimer *pingTimer;
 /// 重连定时器
-@property (nonatomic, strong) NSTimer *reConnectTimer;
+@property (nonatomic, strong) NSTimer *reconnectTimer;
 
 // 实例化对象
 + (instancetype)instance;
@@ -68,6 +68,14 @@ typedef NS_ENUM(NSUInteger, MessageType) {
  断开连接
  */
 - (void)disconnect;
+
+
+
+/**
+ 停止重连
+ */
+- (void)stopReconnect;
+
 
 /**
  发送消息

@@ -26,6 +26,10 @@ static const long tag = 110;
 /// 数据缓冲区
 @property (nonatomic, strong) NSMutableData *buffer;
 @property (nonatomic, strong) NSData *pingPacket;
+@property (nonatomic, assign) NSInteger reconnectCount;
+// 是否正在连接
+@property (nonatomic, assign) BOOL isConnecting;
+
 
 
 /// socket代理 队列
@@ -53,6 +57,8 @@ static const long tag = 110;
 - (instancetype)init {
     if (self = [super init]) {
         [self initSocket];
+//        [self.pingTimer setFireDate:[NSDate distantFuture]];
+//        [self.reconnectTimer setFireDate:[NSDate distantFuture]];
     }
     return self;
 }
@@ -164,7 +170,7 @@ static const long tag = 110;
 }
 
 
-- (void)unpackWithData:(NSData *)data {
+- (void)unpacketWithData:(NSData *)data {
     
     if (data.length) {
         // 添加到缓冲区
@@ -283,11 +289,42 @@ static const long tag = 110;
     self.delegateQueue = nil;
     self.sendQueue = nil;
     self.receiveQueue = nil;
+    self.reconnectCount = 0;
 }
 
 
-- (void)reConnect {
+- (void)stoPingPacket {
+    [self.pingTimer setFireDate:[NSDate distantFuture]];
+}
+
+
+- (void)stopReconnect {
+    self.reconnectCount = 0;
+    self.isConnecting = NO;
+    [self.reconnectTimer setFireDate:[NSDate distantFuture]];
+//    [self.reconnectTimer invalidate]; // 从 runLoop 中移除
+//    self.reconnectTimer = nil; // 防止♻️应用, timer 使用 strong 修饰, 控制器对它强应用，time 添加了target 是self 也是强应用
+}
+
+- (void)startReconnect {
     
+    if ([self isConnect]) {
+        [self stopReconnect];
+        return;
+    }
+    
+    _isConnecting = YES;
+    _reconnectCount++;
+    if (self.reconnectCount > 3) {
+        [self stopReconnect];
+        NSLog(@"连接次数大于了3 次");
+        return;
+    }
+    
+    NSError *error = nil;
+    BOOL isSuccess = [self.socket connectToHost:Khost onPort:Kport error:&error];
+    
+    NSLog(@"正在%zd重连.... 结果 == %zd ,error = %@", self.reconnectCount, isSuccess, error);
 }
 
 
@@ -301,6 +338,9 @@ static const long tag = 110;
 
 
 - (void)connect {
+    [self.socket disconnect];
+    self.buffer = nil;
+    
     NSError *error = nil;
     [self.socket connectToHost:Khost onPort:Kport error:&error];
 }
@@ -319,7 +359,7 @@ static const long tag = 110;
 - (void)socket:(GCDAsyncSocket *)sock didWriteDataWithTag:(long)tag {
 //    NSLog(@"didWriteDataWithTag = %ld", tag);
     
-//    NSLog(@"发送消息成功");
+    NSLog(@"发送消息成功");
 
 }
 
@@ -330,7 +370,7 @@ static const long tag = 110;
     
     
     // 调用解包方法
-    [self unpackWithData:data];
+    [self unpacketWithData:data];
     
     // 再次主动读取收到的消息
     [self readRceiveData];
@@ -340,6 +380,9 @@ static const long tag = 110;
 
 /// 连接成功调用
 - (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(uint16_t)port {
+    
+    [self stopReconnect];
+    
     if ([self.delegate respondsToSelector:@selector(socketManager:didConnect:port:)]) {
         [self.delegate socketManager:self didConnect:host port:port];
     }
@@ -354,6 +397,15 @@ static const long tag = 110;
 /// 断开成功调用
 
 - (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err {
+    
+    [self stoPingPacket];
+    
+    // 如果不是主动退出 并且 不是正在重连状态
+    // TODO: 判断主动退出情况
+    if (!_isConnecting) {
+        [self.reconnectTimer setFireDate:[NSDate distantPast]];
+    }
+    
     if ([self.delegate respondsToSelector:@selector(socketManager:didDisconnectWithError:)]) {
         [self.delegate socketManager:self didDisconnectWithError:err];
     }
@@ -391,17 +443,24 @@ static const long tag = 110;
     return _pingPacket;
 }
 
-- (NSTimer *)reConnectTimer {
-    if (!_reConnectTimer) {
-        _reConnectTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(reConnect) userInfo:nil repeats:YES];
+- (NSTimer *)reconnectTimer {
+    if (!_reconnectTimer) {
+        
+//        _reconnectTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(startReconnect) userInfo:nil repeats:YES];
+        
+        _reconnectTimer = [NSTimer timerWithTimeInterval:5.0 target:self selector:@selector(startReconnect) userInfo:nil repeats:YES];
+        [[NSRunLoop mainRunLoop] addTimer:_reconnectTimer forMode:NSRunLoopCommonModes];
     }
-    return _reConnectTimer;
+    return _reconnectTimer;
 }
 
 
 - (NSTimer *)pingTimer {
     if (!_pingTimer) {
-        _pingTimer = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(startPing) userInfo:nil repeats:YES];
+//        _pingTimer = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(startPing) userInfo:nil repeats:YES];
+        
+        _pingTimer = [NSTimer timerWithTimeInterval:120.0 target:self selector:@selector(startPing) userInfo:nil repeats:YES];
+        [[NSRunLoop mainRunLoop] addTimer:_pingTimer forMode:NSRunLoopCommonModes];
     }
     return _pingTimer;
 }
@@ -426,6 +485,14 @@ static const long tag = 110;
         _receiveQueue = dispatch_queue_create("receiveQueueName", DISPATCH_QUEUE_SERIAL);
     }
     return _receiveQueue;
+}
+
+- (void)dealloc {
+    [self.pingTimer invalidate];
+    self.pingTimer = nil;
+    
+    [self.reconnectTimer invalidate];
+    self.reconnectTimer = nil;
 }
 
 @end
