@@ -52,6 +52,151 @@ static NSString *const kat = @"ate";
 @implementation ViewController (SendMessage)
 
 
+// 生成消息头部
+- (DDXMLElement *)generateXMLHeaderInfo {
+    
+    DDXMLElement *xmlHeader = [[DDXMLElement alloc] initWithName:kmsg];
+    [xmlHeader addAttributeWithName:kbusinessType stringValue:@"efeng"];
+    [xmlHeader addAttributeWithName:kfrom stringValue:kUserName];
+    [xmlHeader addAttributeWithName:ktype stringValue:@"chat"];
+    [xmlHeader addAttributeWithName:kto stringValue:kFriendName];
+    [xmlHeader addAttributeWithName:kid stringValue:[self getCurretStamp]]; // 时间戳
+    
+    return xmlHeader;
+}
+
+- (DDXMLNode *)generateXMLNodeWithDict:(NSDictionary *)dict {
+    
+    NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
+    NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    DDXMLNode *body = [DDXMLNode elementWithName:kbody stringValue:str];
+    return body;
+}
+
+- (NSDictionary *)generCommonDictWithBody:(NSString *)body
+                         fileName:(NSString *)fileName
+                           length:(NSUInteger)length
+                           stream:(NSString *)stream
+                               at:(NSString *)at
+                      messageType:(NSString *)type {
+    
+    NSMutableDictionary *commoneDict = [NSMutableDictionary dictionary];
+    [commoneDict setObject:body forKey:kbody];
+    [commoneDict setObject:kCompanyId forKey:kcompanyId];
+    [commoneDict setObject:fileName forKey:kfileName];
+    [commoneDict setObject:kFriendId forKey:ktoId];
+    [commoneDict setObject:[self getCurretStamp] forKey:ksendTime];
+    [commoneDict setObject:[self getCurretStamp] forKey:kmessageId];
+    [commoneDict setObject:kName forKey:kfromName];
+    [commoneDict setObject:@(length) forKey:klength];
+    [commoneDict setObject:stream forKey:kstream];
+    [commoneDict setObject:@"李伟鹏" forKey:ktoName];
+    [commoneDict setObject:@"" forKey:kat];
+    [commoneDict setObject:type forKey:ktype];
+    [commoneDict setObject:@(0) forKey:kprivateSend];
+    [commoneDict setObject:@"0" forKey:kstatus];
+    [commoneDict setObject:kUsesrId forKey:kfromId];
+    
+    return @{kmessageCommon: commoneDict};
+}
+
+
+
+
+
+- (NSString *)videoMessageURL:(NSURL *)videoRUl {
+    NSData *data = [NSData dataWithContentsOfURL:videoRUl];
+    DDXMLElement *aMessage = [self generateXMLHeaderInfo];
+    NSString *body = @"c59c7230f7d041fe8e9afad31146c27b___1516085592842___1516085592842.mp4";
+    NSString *fileName = @"c59c7230f7d041fe8e9afad31146c27b___1516085592842___1516085592842.mp4";
+    NSString *stream = [data base64EncodedStringWithOptions:0];
+    
+    
+    NSDictionary *commonDict = [self generCommonDictWithBody:body
+                                                    fileName:fileName
+                                                      length:data.length
+                                                      stream:stream
+                                                          at:@""
+                                                 messageType:@""];
+    
+    DDXMLNode *bodyNode = [self generateXMLNodeWithDict:commonDict];
+    
+    [aMessage addChild:bodyNode];
+    
+    return [aMessage compactXMLString];
+    
+    
+//    <msg businessType="efeng" from="yuhongpeng@baidu.com/app" type="chat" to="liweipeng@baidu.com" id="1516085592842126"><body>{
+//        "messageCommon" : {
+//            "body" : "c59c7230f7d041fe8e9afad31146c27b___1516085592842___1516085592842.mp4",
+//            "companyId" : "3",
+//            "fileName" : "c59c7230f7d041fe8e9afad31146c27b___1516085592842___1516085592842.mp4",
+//            "sendTime" : "1516085592842",
+//            "toId" : "7e825eacb20a4d659bbe38e252340e74",
+//            "messageId" : "1516085592842126",
+//            "fromName" : "于鸿鹏",
+//            "length" : 217820,
+//            "stream" : ";;;",
+//            "type" : "video",
+//            "toName" : "李伟鹏",
+//            "status" : "0",
+//            "fromId" : "c59c7230f7d041fe8e9afad31146c27b"
+//        }
+//    }</body></msg>
+    
+}
+
+
+/**
+ 发送图片消息
+
+ @param image 要发送的图片
+ @param type 消息类型 （图片时为 "image"）
+ @return 返回字符串
+ */
+- (NSString *)imageMessage:(UIImage *)image messageType:(NSString *)type {
+    
+    NSData *data = UIImagePNGRepresentation(image);
+    NSData *data2 = UIImageJPEGRepresentation(image, 0.1);
+    DDXMLElement *aMessage = [self generateXMLHeaderInfo];
+    NSString *body = @"0___1516028374630___1516028374630_s.jpg";
+    NSString *fileName = @"0___1516028374630___1516028374630_s.jpg";
+    NSString *stream = [data2 base64EncodedStringWithOptions:0];
+
+    
+    NSDictionary *commonDict = [self generCommonDictWithBody:body
+                                                    fileName:fileName
+                                                      length:data.length
+                                                      stream:stream
+                                                          at:@""
+                                                 messageType:type];
+    
+    DDXMLNode *bodyNode = [self generateXMLNodeWithDict:commonDict];
+    
+    [aMessage addChild:bodyNode];
+    
+    return [aMessage compactXMLString];
+    
+// eg:
+//    <msg businessType="efeng" from="yuhongpeng@wanzhao.com/app" type="chat" to="liweipeng@wanzhao.com" id="1516028371630158"><body>{
+//        "messageCommon" : {
+//            "body" : "0___1516028371630___1516028371630_s.jpg",
+//            "companyId" : "1",
+//            "fileName" : "0___1516028371630___1516028371630_s.jpg",
+//            "sendTime" : "1516028887372",
+//            "toId" : "506f32124aca4015bb75673822124843",
+//            "messageId" : "1516028371630158",
+//            "stream" : "qecN8+Pzx+VbKNvUNgj2NADiMqRjNI\r\nisoIfk",
+//            "length" : 186756,
+//            "fromName" : "于鸿鹏",
+//            "type" : "image",
+//            "toName" : "李伟鹏",
+//            "status" : "0",
+//            "fromId" : "8f756551c6b94da198405c2276b522f1"
+//        }
+//    }</body></msg>
+}
+
 
 // 发普通消息
 - (NSString *)textMessage:(NSString *)mesage messageType:(NSString *)type {
@@ -62,45 +207,6 @@ static NSString *const kat = @"ate";
     [aMessage addAttributeWithName:ktype stringValue:@"chat"];
     [aMessage addAttributeWithName:kto stringValue:@"liweipeng@wanzhao.com"];
     [aMessage addAttributeWithName:kid stringValue:[self getCurretStamp]]; // 时间戳
-    
-//    // 生成 body 字典
-//    <msg businessType="efeng" from="yuhongpeng@wanzhao.com/app" type="chat" to="liweipeng@wanzhao.com" id="1515933915123158"><body>{
-//        "messageCommon" : {
-//            "body" : "M",
-//            "companyId" : "1",
-//            "fileName" : "",
-//            "toId" : "506f32124aca4015bb75673822124843",
-//            "sendTime" : "1515933915123",
-//            "messageId" : "1515933915123158",
-//            "fromName" : "于鸿鹏",
-//            "length" : 0,
-//            "stream" : "",
-//            "ate" : "",
-//            "type" : "text",
-//            "privateSend" : 0,
-//            "toName" : "李伟鹏",
-//            "status" : "0",
-//            "fromId" : "8f756551c6b94da198405c2276b522f1"
-//        }
-    
-    
-//    ate = "";
-//    body = "\U666e\U901a\U6d88\U606f---\U9e4f\U54e5\Uff0c\U4f60\U597d";
-//    companyId = 1;
-//    fileName = "";
-//    fromId = 8f756551c6b94da198405c2276b522f1;
-//    fromName = "\U4e8e\U9e3f\U9e4f";
-//    length = "";
-//    messageId = 1515936299133;
-//    privateSend = 0;
-//    sendTime = 1515936299133;
-//    status = 0;
-//    stream = "";
-//    text = type;
-//    toId = 506f32124aca4015bb75673822124843;
-//    toName = "\U674e\U4f1f\U9e4f";
-    
-//    }</body></msg>
     
     NSMutableDictionary *commoneDict = [NSMutableDictionary dictionary];
     [commoneDict setObject:mesage forKey:kbody];
@@ -130,6 +236,7 @@ static NSString *const kat = @"ate";
     // TODO: 处理将要发送的消息，插入到数据库 ?
     return [aMessage compactXMLString];
 }
+
 
 
 

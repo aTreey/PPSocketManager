@@ -97,7 +97,8 @@ static NSString *const kUsesrId = @"8f756551c6b94da198405c2276b522f1";
 }
 - (IBAction)imageMessageAction:(id)sender {
     
-
+    UIImage *image = [UIImage imageNamed:@"123"];
+    [self.manager sendMsg:[self imageMessage:image messageType:@"image"] type:MessageTypeMessage];
 }
 
 - (IBAction)takePhotoAction:(id)sender {

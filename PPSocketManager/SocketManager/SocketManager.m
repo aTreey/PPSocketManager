@@ -67,13 +67,16 @@ static const long tag = 110;
 // 发送消息
 - (void)sendMsg:(NSString *)msg type:(MessageType)type {
     NSData *data = [msg dataUsingEncoding:NSUTF8StringEncoding];
+    [self sendMsgData:data type:type];
+}
+
+- (void)sendMsgData:(NSData *)data type:(MessageType)type {
     NSData *packetData = [self packetWithData:data messageType:type];
     
     dispatch_async(self.sendQueue, ^{
         [self.socket writeData:packetData withTimeout:timeOut tag:tag];
     });
 }
-
 
 
 /**

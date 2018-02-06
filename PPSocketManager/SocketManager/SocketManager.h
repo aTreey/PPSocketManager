@@ -12,14 +12,16 @@
 
 @class SocketManager;
 
-// 消息类型
+// 通信类型
 typedef NS_ENUM(NSUInteger, MessageType) {
     MessageTypeLogin = 0,       // 登陆
     MessageTypePing,            // 心跳ping包
     MessageTypeMessage,         // 消息类型
-    MessageTypeIq,          // 请求或者响应类型
+    MessageTypeIq,              // 请求或者响应类型
     MessageTypePresence,        // 出席类型
 };
+
+
 
 
 
@@ -85,6 +87,9 @@ typedef NS_ENUM(NSUInteger, MessageType) {
 
  */
 - (void)sendMsg:(NSString *)msg type:(MessageType)type;
+
+- (void)sendMsgData:(NSData *)data type:(MessageType)type;
+
 
 
 @end

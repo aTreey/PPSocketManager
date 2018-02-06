@@ -8,6 +8,12 @@
 
 #import <UIKit/UIKit.h>
 
+typedef NS_ENUM(NSUInteger, SendMessageType) {
+    MSNMessageTypeText,
+    MSNMessageTypeImage,
+    MSNMessageTypeVideo,
+};
+
 @interface ViewController : UIViewController
 
 
